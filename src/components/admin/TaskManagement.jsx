@@ -172,7 +172,7 @@ function TaskManagement() {
   }
 
   const handleTaskUpdate = () => {
-    fetchTasks()
+    fetchTasks() // This will refresh the task list with updated progress
   }
 
   const handleClose = () => {

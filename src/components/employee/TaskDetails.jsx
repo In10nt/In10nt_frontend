@@ -108,8 +108,23 @@ function TaskDetails({ task, open, onClose, onTaskUpdate, currentUser }) {
       await api.put(`/subtasks/${subtaskId}`, { isCompleted: !isCompleted })
       fetchSubtasks()
       // Refresh task to get updated progress
-      setTimeout(() => {
+      setTimeout(async () => {
         onTaskUpdate()
+        // Refresh the task details to show updated progress
+        if (task && task.id) {
+          try {
+            const updatedTaskResponse = await api.get(`/tasks/${task.id}`)
+            if (updatedTaskResponse.data) {
+              setTaskProgress(updatedTaskResponse.data.progress || 0)
+              // Show completion message if task is now completed
+              if (updatedTaskResponse.data.progress === 100 && updatedTaskResponse.data.status === 'COMPLETED') {
+                alert('🎉 Congratulations! Task completed automatically as all subtasks are done!')
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching updated task:', error)
+          }
+        }
       }, 500)
     } catch (error) {
       console.error('Error updating subtask:', error)

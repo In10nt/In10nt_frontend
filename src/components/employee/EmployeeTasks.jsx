@@ -14,9 +14,18 @@ import {
   Typography,
   LinearProgress,
   Card,
-  CardContent
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material'
-import { Add, Visibility, PlayArrow } from '@mui/icons-material'
+import { Add, Visibility, PlayArrow, Edit, Delete } from '@mui/icons-material'
 import api from '../../api/axios'
 import TaskDetails from './TaskDetails'
 
@@ -24,6 +33,14 @@ function EmployeeTasks({ userId, currentUser }) {
   const [tasks, setTasks] = useState([])
   const [selectedTask, setSelectedTask] = useState(null)
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false)
+  const [createTaskOpen, setCreateTaskOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    priority: 'MEDIUM',
+    dueDate: ''
+  })
 
   useEffect(() => {
     fetchTasks()
@@ -31,11 +48,89 @@ function EmployeeTasks({ userId, currentUser }) {
 
   const fetchTasks = async () => {
     try {
-      const response = await api.get(`/tasks/assigned/${userId}`)
-      setTasks(response.data)
+      // Get both assigned tasks and tasks created by the employee
+      const [assignedResponse, createdResponse] = await Promise.all([
+        api.get(`/tasks/assigned/${userId}`),
+        api.get(`/tasks`)
+      ])
+      
+      // Filter created tasks by current user and combine with assigned tasks
+      const createdTasks = createdResponse.data.filter(task => task.createdBy?.id === userId)
+      const assignedTasks = assignedResponse.data
+      
+      // Combine and remove duplicates
+      const allTasks = [...assignedTasks]
+      createdTasks.forEach(task => {
+        if (!allTasks.find(t => t.id === task.id)) {
+          allTasks.push(task)
+        }
+      })
+      
+      setTasks(allTasks)
     } catch (error) {
       console.error('Error fetching tasks:', error)
     }
+  }
+
+  const handleCreateTask = async (e) => {
+    e.preventDefault()
+    try {
+      const taskData = {
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        dueDate: formData.dueDate || null,
+        status: 'PENDING',
+        assignedTo: { id: userId }, // Assign to self
+        createdBy: { id: userId }
+      }
+
+      if (editingTask) {
+        await api.put(`/tasks/${editingTask.id}`, taskData)
+      } else {
+        await api.post('/tasks', taskData)
+      }
+      
+      handleCloseDialog()
+      fetchTasks()
+    } catch (error) {
+      console.error('Error saving task:', error)
+      alert('Error saving task. Please try again.')
+    }
+  }
+
+  const handleEditTask = (task) => {
+    setEditingTask(task)
+    setFormData({
+      title: task.title,
+      description: task.description || '',
+      priority: task.priority,
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''
+    })
+    setCreateTaskOpen(true)
+  }
+
+  const handleDeleteTask = async (taskId) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      try {
+        await api.delete(`/tasks/${taskId}`)
+        fetchTasks()
+      } catch (error) {
+        console.error('Error deleting task:', error)
+        alert('Error deleting task. Please try again.')
+      }
+    }
+  }
+
+  const handleCloseDialog = () => {
+    setCreateTaskOpen(false)
+    setEditingTask(null)
+    setFormData({
+      title: '',
+      description: '',
+      priority: 'MEDIUM',
+      dueDate: ''
+    })
   }
 
   const handleViewTask = (task) => {
@@ -76,23 +171,43 @@ function EmployeeTasks({ userId, currentUser }) {
     }
   }
 
+  const canEditTask = (task) => {
+    return task.createdBy?.id === userId || task.assignedTo?.id === userId
+  }
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" sx={{ color: '#000000' }}>
           My Tasks ({tasks.length})
         </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setCreateTaskOpen(true)}
+          sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
+        >
+          Create Task
+        </Button>
       </Box>
 
       {tasks.length === 0 ? (
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-              No tasks assigned yet
+              No tasks yet
             </Typography>
-            <Typography color="text.secondary">
-              Tasks assigned to you will appear here
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              Create your first task to get started!
             </Typography>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setCreateTaskOpen(true)}
+              sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
+            >
+              Create Task
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -118,6 +233,9 @@ function EmployeeTasks({ userId, currentUser }) {
                         <Typography variant="caption" color="text.secondary">
                           {task.description.substring(0, 50)}...
                         </Typography>
+                      )}
+                      {task.createdBy?.id === userId && (
+                        <Chip label="Created by me" size="small" sx={{ ml: 1, backgroundColor: '#e3f2fd' }} />
                       )}
                     </Box>
                   </TableCell>
@@ -175,6 +293,24 @@ function EmployeeTasks({ userId, currentUser }) {
                           <PlayArrow />
                         </IconButton>
                       )}
+                      {canEditTask(task) && (
+                        <>
+                          <IconButton
+                            onClick={() => handleEditTask(task)}
+                            sx={{ color: '#c71f37' }}
+                            title="Edit Task"
+                          >
+                            <Edit />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleDeleteTask(task.id)}
+                            sx={{ color: '#c71f37' }}
+                            title="Delete Task"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -183,6 +319,70 @@ function EmployeeTasks({ userId, currentUser }) {
           </Table>
         </TableContainer>
       )}
+
+      {/* Create/Edit Task Dialog */}
+      <Dialog open={createTaskOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {editingTask ? 'Edit Task' : 'Create New Task'}
+        </DialogTitle>
+        <form onSubmit={handleCreateTask}>
+          <DialogContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+              <TextField
+                label="Task Title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+                fullWidth
+              />
+              
+              <TextField
+                label="Description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                multiline
+                rows={3}
+                fullWidth
+              />
+              
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Priority</InputLabel>
+                  <Select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    label="Priority"
+                  >
+                    <MenuItem value="LOW">Low</MenuItem>
+                    <MenuItem value="MEDIUM">Medium</MenuItem>
+                    <MenuItem value="HIGH">High</MenuItem>
+                    <MenuItem value="URGENT">Urgent</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <TextField
+                  label="Due Date"
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button 
+              type="submit" 
+              variant="contained"
+              sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
+            >
+              {editingTask ? 'Update' : 'Create'} Task
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
 
       <TaskDetails
         task={selectedTask}
