@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/axios'
-import { Plus, Edit, Trash2, AlertTriangle, Calendar } from 'lucide-react'
+import { Plus, Edit, Trash2, AlertTriangle, Calendar, Search } from 'lucide-react'
 
 function SubscriptionManagement() {
   const [subscriptions, setSubscriptions] = useState([])
+  const [filteredSubscriptions, setFilteredSubscriptions] = useState([])
   const [employees, setEmployees] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [editingSubscription, setEditingSubscription] = useState(null)
   const [expiringSoon, setExpiringSoon] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     serviceName: '',
     provider: '',
@@ -25,6 +27,24 @@ function SubscriptionManagement() {
     fetchEmployees()
     fetchExpiringSoon()
   }, [])
+
+  useEffect(() => {
+    filterSubscriptions()
+  }, [subscriptions, searchTerm])
+
+  const filterSubscriptions = () => {
+    if (!searchTerm) {
+      setFilteredSubscriptions(subscriptions)
+    } else {
+      const filtered = subscriptions.filter(subscription =>
+        subscription.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subscription.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subscription.assignedTo?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subscription.status.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredSubscriptions(filtered)
+    }
+  }
 
   const fetchSubscriptions = async () => {
     try {
@@ -144,6 +164,31 @@ function SubscriptionManagement() {
         <button className="btn btn-primary" onClick={() => setShowForm(true)}>
           <Plus size={16} /> Add Subscription
         </button>
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ position: 'relative', maxWidth: '400px' }}>
+          <Search size={20} style={{ 
+            position: 'absolute', 
+            left: '12px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            color: '#c71f37' 
+          }} />
+          <input
+            type="text"
+            placeholder="Search subscriptions by service, provider, assignee, or status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 12px 12px 40px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              fontSize: '14px'
+            }}
+          />
+        </div>
       </div>
 
       {/* Expiring Soon Alert */}
@@ -284,7 +329,7 @@ function SubscriptionManagement() {
             </tr>
           </thead>
           <tbody>
-            {subscriptions.map(subscription => (
+            {filteredSubscriptions.map(subscription => (
               <tr key={subscription.id} style={{ 
                 backgroundColor: isExpiringSoon(subscription.endDate) ? '#fff3cd' : 'transparent' 
               }}>

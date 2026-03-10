@@ -26,7 +26,9 @@ import {
   Inventory,
   Subscriptions,
   Person,
-  Logout
+  Logout,
+  Folder,
+  Group
 } from '@mui/icons-material'
 
 const drawerWidth = 240
@@ -53,6 +55,8 @@ function Layout({ user, onLogout, children, tabs, activeTab, setActiveTab }) {
   const getIcon = (tabId) => {
     const iconMap = {
       tasks: <Assignment />,
+      projects: <Folder />,
+      projectMembers: <Group />,
       employees: <People />,
       leaves: <EventNote />,
       salary: <AttachMoney />,

@@ -1,14 +1,33 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Edit } from 'lucide-react'
+import { Edit, Search } from 'lucide-react'
 
 function SalaryManagement() {
   const [employees, setEmployees] = useState([])
+  const [filteredEmployees, setFilteredEmployees] = useState([])
   const [editingSalary, setEditingSalary] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     fetchEmployees()
   }, [])
+
+  useEffect(() => {
+    filterEmployees()
+  }, [employees, searchTerm])
+
+  const filterEmployees = () => {
+    if (!searchTerm) {
+      setFilteredEmployees(employees)
+    } else {
+      const filtered = employees.filter(employee =>
+        employee.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.department?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredEmployees(filtered)
+    }
+  }
 
   const fetchEmployees = async () => {
     const response = await axios.get('/api/users')
@@ -24,6 +43,32 @@ function SalaryManagement() {
   return (
     <div>
       <h2 style={{ marginBottom: '20px' }}>Salary Management</h2>
+      
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ position: 'relative', maxWidth: '400px' }}>
+          <Search size={20} style={{ 
+            position: 'absolute', 
+            left: '12px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            color: '#c71f37' 
+          }} />
+          <input
+            type="text"
+            placeholder="Search employees by name, email, or department..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 12px 12px 40px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              fontSize: '14px'
+            }}
+          />
+        </div>
+      </div>
+      
       <div className="card">
         <table>
           <thead>
@@ -36,7 +81,7 @@ function SalaryManagement() {
             </tr>
           </thead>
           <tbody>
-            {employees.map(emp => (
+            {filteredEmployees.map(emp => (
               <tr key={emp.id}>
                 <td>{emp.fullName}</td>
                 <td>{emp.email}</td>
