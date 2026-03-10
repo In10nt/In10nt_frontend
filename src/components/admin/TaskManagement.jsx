@@ -23,7 +23,10 @@ import {
   Autocomplete,
   Typography,
   InputAdornment,
-  LinearProgress
+  LinearProgress,
+  Tabs,
+  Tab,
+  Badge
 } from '@mui/material'
 import { Add, Edit, Delete, Assignment, Search, Check, Visibility } from '@mui/icons-material'
 import api from '../../api/axios'
@@ -36,6 +39,7 @@ function TaskManagement() {
   const [open, setOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [taskFilter, setTaskFilter] = useState('all') // 'all', 'admin-created', 'employee-created'
   const [selectedTask, setSelectedTask] = useState(null)
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
@@ -55,7 +59,7 @@ function TaskManagement() {
 
   useEffect(() => {
     filterTasks()
-  }, [tasks, searchTerm])
+  }, [tasks, searchTerm, taskFilter])
 
   const fetchCurrentUser = () => {
     const userData = localStorage.getItem('user')
@@ -65,18 +69,36 @@ function TaskManagement() {
   }
 
   const filterTasks = () => {
-    if (!searchTerm) {
-      setFilteredTasks(tasks)
-    } else {
-      const filtered = tasks.filter(task =>
+    let filtered = tasks
+    
+    // First filter by task type
+    switch (taskFilter) {
+      case 'admin-created':
+        filtered = tasks.filter(task => 
+          task.createdBy?.role === 'ADMIN' || task.createdBy?.role === 'CEO'
+        )
+        break
+      case 'employee-created':
+        filtered = tasks.filter(task => 
+          task.createdBy?.role === 'EMPLOYEE'
+        )
+        break
+      default:
+        filtered = tasks
+    }
+    
+    // Then filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(task =>
         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.assignedTo?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.priority.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      setFilteredTasks(filtered)
     }
+    
+    setFilteredTasks(filtered)
   }
 
   const fetchTasks = async () => {
@@ -211,7 +233,7 @@ function TaskManagement() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" sx={{ color: '#000000' }}>
-          Task Management
+          Task Management ({filteredTasks.length})
         </Typography>
         <Button
           variant="contained"
@@ -221,6 +243,58 @@ function TaskManagement() {
         >
           Add Task
         </Button>
+      </Box>
+
+      {/* Filter Tabs */}
+      <Box sx={{ mb: 3 }}>
+        <Tabs 
+          value={taskFilter} 
+          onChange={(e, newValue) => setTaskFilter(newValue)}
+          sx={{ 
+            '& .MuiTab-root': { 
+              color: '#666',
+              '&.Mui-selected': { 
+                color: '#c71f37' 
+              }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#c71f37'
+            }
+          }}
+        >
+          <Tab 
+            label={
+              <Badge badgeContent={tasks.length} color="primary" sx={{ '& .MuiBadge-badge': { backgroundColor: '#c71f37' } }}>
+                All Tasks
+              </Badge>
+            } 
+            value="all" 
+          />
+          <Tab 
+            label={
+              <Badge 
+                badgeContent={tasks.filter(t => t.createdBy?.role === 'ADMIN' || t.createdBy?.role === 'CEO').length} 
+                color="primary" 
+                sx={{ '& .MuiBadge-badge': { backgroundColor: '#1976d2' } }}
+              >
+                Created by Admin
+              </Badge>
+            } 
+            value="admin-created" 
+          />
+          <Tab 
+            label={
+              <Badge 
+                badgeContent={tasks.filter(t => t.createdBy?.role === 'EMPLOYEE').length} 
+                color="primary" 
+                sx={{ '& .MuiBadge-badge': { backgroundColor: '#2e7d32' } }}
+              >
+                Created by Employees
+              </Badge>
+            } 
+            value="employee-created" 
+          />
+        </Tabs>
       </Box>
 
       <Box sx={{ mb: 3 }}>
@@ -275,6 +349,21 @@ function TaskManagement() {
                           {task.description.substring(0, 50)}...
                         </Typography>
                       )}
+                      <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        {task.createdBy?.role === 'EMPLOYEE' ? (
+                          <Chip 
+                            label={`Created by ${task.createdBy?.fullName}`} 
+                            size="small" 
+                            sx={{ backgroundColor: '#e8f5e8', color: '#2e7d32' }} 
+                          />
+                        ) : (
+                          <Chip 
+                            label={`Created by ${task.createdBy?.fullName || 'Admin'}`} 
+                            size="small" 
+                            sx={{ backgroundColor: '#e3f2fd', color: '#1976d2' }} 
+                          />
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                 </TableCell>

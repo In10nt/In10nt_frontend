@@ -34,7 +34,10 @@ import {
   CheckCircle,
   RadioButtonUnchecked,
   Send,
-  Notifications
+  Notifications,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  Visibility
 } from '@mui/icons-material'
 import api from '../../api/axios'
 
@@ -42,6 +45,7 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
   const [subtasks, setSubtasks] = useState([])
   const [comments, setComments] = useState([])
   const [reminders, setReminders] = useState([])
+  const [attachments, setAttachments] = useState([])
   const [newSubtask, setNewSubtask] = useState({ title: '', description: '' })
   const [newComment, setNewComment] = useState('')
   const [newReminder, setNewReminder] = useState({ text: '', recipientId: '' })
@@ -54,6 +58,7 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
       fetchSubtasks()
       fetchComments()
       fetchReminders()
+      fetchAttachments()
       setTaskProgress(task.progress || 0)
     }
   }, [task, open])
@@ -82,6 +87,15 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
       setReminders(response.data)
     } catch (error) {
       console.error('Error fetching reminders:', error)
+    }
+  }
+
+  const fetchAttachments = async () => {
+    try {
+      const response = await api.get(`/task-attachments/task/${task.id}`)
+      setAttachments(response.data)
+    } catch (error) {
+      console.error('Error fetching attachments:', error)
     }
   }
 
@@ -162,6 +176,21 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
     }
   }
 
+  const handleReviewAttachment = async (attachmentId, approvalStatus, reviewComment = '') => {
+    try {
+      const reviewData = {
+        approvalStatus,
+        reviewedById: currentUser.id,
+        reviewComment
+      }
+      await api.put(`/task-attachments/${attachmentId}/review`, reviewData)
+      fetchAttachments()
+    } catch (error) {
+      console.error('Error reviewing attachment:', error)
+      alert('Error reviewing attachment. Please try again.')
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'PENDING': return 'warning'
@@ -178,6 +207,15 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
       case 'MEDIUM': return 'info'
       case 'HIGH': return 'warning'
       case 'URGENT': return 'error'
+      default: return 'default'
+    }
+  }
+
+  const getApprovalStatusColor = (status) => {
+    switch (status) {
+      case 'PENDING': return 'warning'
+      case 'APPROVED': return 'success'
+      case 'REJECTED': return 'error'
       default: return 'default'
     }
   }
@@ -253,6 +291,103 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
                   </Typography>
                 )}
               </Box>
+            </CardContent>
+          </Card>
+
+          {/* Work Attachments Review */}
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Work Attachments ({attachments.length})</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Employees can attach work at any task status
+                </Typography>
+              </Box>
+              
+              <List>
+                {attachments.map((attachment) => (
+                  <ListItem key={attachment.id} divider>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                      {attachment.type === 'LINK' ? (
+                        <LinkIcon />
+                      ) : (
+                        <ImageIcon />
+                      )}
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="subtitle2">{attachment.fileName}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Uploaded by: {attachment.uploadedBy?.fullName}
+                        </Typography>
+                        <br />
+                        <Typography variant="caption" color="text.secondary">
+                          {attachment.description}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                          <Chip 
+                            label={attachment.approvalStatus} 
+                            color={getApprovalStatusColor(attachment.approvalStatus)}
+                            size="small"
+                          />
+                          {attachment.reviewComment && (
+                            <Typography variant="caption" color="text.secondary">
+                              Review: {attachment.reviewComment}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          {attachment.type === 'LINK' ? (
+                            <IconButton 
+                              onClick={() => window.open(attachment.fileUrl, '_blank')}
+                              title="Open Link"
+                              size="small"
+                            >
+                              <Visibility />
+                            </IconButton>
+                          ) : (
+                            <IconButton 
+                              onClick={() => window.open(attachment.fileUrl, '_blank')}
+                              title="View Image"
+                              size="small"
+                            >
+                              <Visibility />
+                            </IconButton>
+                          )}
+                        </Box>
+                        {attachment.approvalStatus === 'PENDING' && (
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="success"
+                              onClick={() => handleReviewAttachment(attachment.id, 'APPROVED', 'Work approved')}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="error"
+                              onClick={() => {
+                                const comment = prompt('Rejection reason (optional):')
+                                handleReviewAttachment(attachment.id, 'REJECTED', comment || 'Work rejected')
+                              }}
+                            >
+                              Reject
+                            </Button>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  </ListItem>
+                ))}
+                {attachments.length === 0 && (
+                  <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                    No work attachments submitted yet.
+                  </Typography>
+                )}
+              </List>
             </CardContent>
           </Card>
 

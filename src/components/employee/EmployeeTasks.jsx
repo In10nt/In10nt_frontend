@@ -23,7 +23,10 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Tabs,
+  Tab,
+  Badge
 } from '@mui/material'
 import { Add, Visibility, PlayArrow, Edit, Delete } from '@mui/icons-material'
 import api from '../../api/axios'
@@ -31,6 +34,8 @@ import TaskDetails from './TaskDetails'
 
 function EmployeeTasks({ userId, currentUser }) {
   const [tasks, setTasks] = useState([])
+  const [filteredTasks, setFilteredTasks] = useState([])
+  const [taskFilter, setTaskFilter] = useState('all') // 'all', 'created', 'assigned'
   const [selectedTask, setSelectedTask] = useState(null)
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false)
   const [createTaskOpen, setCreateTaskOpen] = useState(false)
@@ -45,6 +50,27 @@ function EmployeeTasks({ userId, currentUser }) {
   useEffect(() => {
     fetchTasks()
   }, [userId])
+
+  useEffect(() => {
+    filterTasks()
+  }, [tasks, taskFilter])
+
+  const filterTasks = () => {
+    let filtered = tasks
+    
+    switch (taskFilter) {
+      case 'created':
+        filtered = tasks.filter(task => task.createdBy?.id === userId)
+        break
+      case 'assigned':
+        filtered = tasks.filter(task => task.createdBy?.id !== userId)
+        break
+      default:
+        filtered = tasks
+    }
+    
+    setFilteredTasks(filtered)
+  }
 
   const fetchTasks = async () => {
     try {
@@ -95,7 +121,11 @@ function EmployeeTasks({ userId, currentUser }) {
       fetchTasks()
     } catch (error) {
       console.error('Error saving task:', error)
-      alert('Error saving task. Please try again.')
+      if (error.response?.status === 403) {
+        alert('You can only edit tasks you created yourself.')
+      } else {
+        alert('Error saving task. Please try again.')
+      }
     }
   }
 
@@ -117,7 +147,11 @@ function EmployeeTasks({ userId, currentUser }) {
         fetchTasks()
       } catch (error) {
         console.error('Error deleting task:', error)
-        alert('Error deleting task. Please try again.')
+        if (error.response?.status === 403) {
+          alert('You can only delete tasks you created yourself.')
+        } else {
+          alert('Error deleting task. Please try again.')
+        }
       }
     }
   }
@@ -172,14 +206,21 @@ function EmployeeTasks({ userId, currentUser }) {
   }
 
   const canEditTask = (task) => {
-    return task.createdBy?.id === userId || task.assignedTo?.id === userId
+    // Employees can only edit/delete tasks they created themselves
+    // Admin-assigned tasks cannot be edited/deleted by employees
+    return task.createdBy?.id === userId
+  }
+
+  const canDeleteTask = (task) => {
+    // Same rule as edit - only tasks created by the employee
+    return task.createdBy?.id === userId
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" sx={{ color: '#000000' }}>
-          My Tasks ({tasks.length})
+          My Tasks ({filteredTasks.length})
         </Typography>
         <Button
           variant="contained"
@@ -191,23 +232,73 @@ function EmployeeTasks({ userId, currentUser }) {
         </Button>
       </Box>
 
-      {tasks.length === 0 ? (
+      {/* Filter Tabs */}
+      <Box sx={{ mb: 3 }}>
+        <Tabs 
+          value={taskFilter} 
+          onChange={(e, newValue) => setTaskFilter(newValue)}
+          sx={{ 
+            '& .MuiTab-root': { 
+              color: '#666',
+              '&.Mui-selected': { 
+                color: '#c71f37' 
+              }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#c71f37'
+            }
+          }}
+        >
+          <Tab 
+            label={
+              <Badge badgeContent={tasks.length} color="primary" sx={{ '& .MuiBadge-badge': { backgroundColor: '#c71f37' } }}>
+                All Tasks
+              </Badge>
+            } 
+            value="all" 
+          />
+          <Tab 
+            label={
+              <Badge badgeContent={tasks.filter(t => t.createdBy?.id === userId).length} color="primary" sx={{ '& .MuiBadge-badge': { backgroundColor: '#2e7d32' } }}>
+                Created by Me
+              </Badge>
+            } 
+            value="created" 
+          />
+          <Tab 
+            label={
+              <Badge badgeContent={tasks.filter(t => t.createdBy?.id !== userId).length} color="primary" sx={{ '& .MuiBadge-badge': { backgroundColor: '#f57c00' } }}>
+                Assigned by Admin
+              </Badge>
+            } 
+            value="assigned" 
+          />
+        </Tabs>
+      </Box>
+
+      {filteredTasks.length === 0 ? (
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-              No tasks yet
+              {taskFilter === 'created' ? 'No tasks created by you yet' : 
+               taskFilter === 'assigned' ? 'No tasks assigned by admin yet' : 
+               'No tasks yet'}
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Create your first task to get started!
+              {taskFilter === 'created' ? 'Create your first task to get started!' : 
+               taskFilter === 'assigned' ? 'Admin will assign tasks to you.' : 
+               'Create your first task to get started!'}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setCreateTaskOpen(true)}
-              sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
-            >
-              Create Task
-            </Button>
+            {(taskFilter === 'all' || taskFilter === 'created') && (
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => setCreateTaskOpen(true)}
+                sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
+              >
+                Create Task
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -224,7 +315,7 @@ function EmployeeTasks({ userId, currentUser }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tasks.map((task) => (
+              {filteredTasks.map((task) => (
                 <TableRow key={task.id} hover>
                   <TableCell>
                     <Box>
@@ -234,9 +325,21 @@ function EmployeeTasks({ userId, currentUser }) {
                           {task.description.substring(0, 50)}...
                         </Typography>
                       )}
-                      {task.createdBy?.id === userId && (
-                        <Chip label="Created by me" size="small" sx={{ ml: 1, backgroundColor: '#e3f2fd' }} />
-                      )}
+                      <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        {task.createdBy?.id === userId ? (
+                          <Chip 
+                            label="Created by me" 
+                            size="small" 
+                            sx={{ backgroundColor: '#e8f5e8', color: '#2e7d32' }} 
+                          />
+                        ) : (
+                          <Chip 
+                            label="Assigned by Admin" 
+                            size="small" 
+                            sx={{ backgroundColor: '#fff3e0', color: '#f57c00' }} 
+                          />
+                        )}
+                      </Box>
                     </Box>
                   </TableCell>
                   <TableCell>
@@ -294,22 +397,22 @@ function EmployeeTasks({ userId, currentUser }) {
                         </IconButton>
                       )}
                       {canEditTask(task) && (
-                        <>
-                          <IconButton
-                            onClick={() => handleEditTask(task)}
-                            sx={{ color: '#c71f37' }}
-                            title="Edit Task"
-                          >
-                            <Edit />
-                          </IconButton>
-                          <IconButton
-                            onClick={() => handleDeleteTask(task.id)}
-                            sx={{ color: '#c71f37' }}
-                            title="Delete Task"
-                          >
-                            <Delete />
-                          </IconButton>
-                        </>
+                        <IconButton
+                          onClick={() => handleEditTask(task)}
+                          sx={{ color: '#c71f37' }}
+                          title="Edit Task"
+                        >
+                          <Edit />
+                        </IconButton>
+                      )}
+                      {canDeleteTask(task) && (
+                        <IconButton
+                          onClick={() => handleDeleteTask(task.id)}
+                          sx={{ color: '#c71f37' }}
+                          title="Delete Task"
+                        >
+                          <Delete />
+                        </IconButton>
                       )}
                     </Box>
                   </TableCell>
