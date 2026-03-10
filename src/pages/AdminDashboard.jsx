@@ -6,6 +6,7 @@ import EmployeeManagement from '../components/admin/EmployeeManagement'
 import LeaveManagement from '../components/admin/LeaveManagement'
 import SalaryManagement from '../components/admin/SalaryManagement'
 import InventoryManagement from '../components/admin/InventoryManagement'
+import SubscriptionManagement from '../components/admin/SubscriptionManagement'
 
 function AdminDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('tasks')
@@ -15,7 +16,8 @@ function AdminDashboard({ user, onLogout }) {
     { id: 'employees', label: 'Employees' },
     { id: 'leaves', label: 'Leaves' },
     { id: 'salary', label: 'Salary' },
-    { id: 'inventory', label: 'Inventory' }
+    { id: 'inventory', label: 'Inventory' },
+    { id: 'subscriptions', label: 'Subscriptions' }
   ]
 
   return (
@@ -25,6 +27,7 @@ function AdminDashboard({ user, onLogout }) {
       {activeTab === 'leaves' && <LeaveManagement />}
       {activeTab === 'salary' && <SalaryManagement />}
       {activeTab === 'inventory' && <InventoryManagement />}
+      {activeTab === 'subscriptions' && <SubscriptionManagement />}
     </Layout>
   )
 }
