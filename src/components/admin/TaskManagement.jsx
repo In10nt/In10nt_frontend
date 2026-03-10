@@ -22,10 +22,12 @@ import {
   MenuItem,
   Autocomplete,
   Typography,
-  InputAdornment
+  InputAdornment,
+  LinearProgress
 } from '@mui/material'
-import { Add, Edit, Delete, Assignment, Search, Check } from '@mui/icons-material'
+import { Add, Edit, Delete, Assignment, Search, Check, Visibility } from '@mui/icons-material'
 import api from '../../api/axios'
+import TaskDetailsAdmin from './TaskDetailsAdmin'
 
 function TaskManagement() {
   const [tasks, setTasks] = useState([])
@@ -34,6 +36,9 @@ function TaskManagement() {
   const [open, setOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [taskDetailsOpen, setTaskDetailsOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -45,11 +50,19 @@ function TaskManagement() {
   useEffect(() => {
     fetchTasks()
     fetchEmployees()
+    fetchCurrentUser()
   }, [])
 
   useEffect(() => {
     filterTasks()
   }, [tasks, searchTerm])
+
+  const fetchCurrentUser = () => {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setCurrentUser(JSON.parse(userData))
+    }
+  }
 
   const filterTasks = () => {
     if (!searchTerm) {
@@ -153,6 +166,15 @@ function TaskManagement() {
     setOpen(true)
   }
 
+  const handleViewTask = (task) => {
+    setSelectedTask(task)
+    setTaskDetailsOpen(true)
+  }
+
+  const handleTaskUpdate = () => {
+    fetchTasks()
+  }
+
   const handleClose = () => {
     setOpen(false)
     setEditingTask(null)
@@ -235,6 +257,7 @@ function TaskManagement() {
               <TableCell><strong>Assigned To</strong></TableCell>
               <TableCell><strong>Priority</strong></TableCell>
               <TableCell><strong>Status</strong></TableCell>
+              <TableCell><strong>Progress</strong></TableCell>
               <TableCell><strong>Due Date</strong></TableCell>
               <TableCell><strong>Actions</strong></TableCell>
             </TableRow>
@@ -270,19 +293,43 @@ function TaskManagement() {
                     size="small"
                   />
                 </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={task.progress || 0}
+                      sx={{
+                        flexGrow: 1,
+                        height: 8,
+                        borderRadius: 4,
+                        '& .MuiLinearProgress-bar': {
+                          backgroundColor: '#c71f37'
+                        }
+                      }}
+                    />
+                    <Typography variant="caption" sx={{ minWidth: 35 }}>
+                      {task.progress || 0}%
+                    </Typography>
+                  </Box>
+                </TableCell>
                 <TableCell>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleEdit(task)} sx={{ color: '#c71f37' }}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(task.id)} sx={{ color: '#c71f37' }}>
-                    <Delete />
-                  </IconButton>
-                  {task.status === 'COMPLETED' && (
-                    <IconButton onClick={() => handleApprove(task.id)} sx={{ color: '#c71f37' }}>
-                      <Check />
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <IconButton onClick={() => handleViewTask(task)} sx={{ color: '#c71f37' }} title="View Details">
+                      <Visibility />
                     </IconButton>
-                  )}
+                    <IconButton onClick={() => handleEdit(task)} sx={{ color: '#c71f37' }}>
+                      <Edit />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(task.id)} sx={{ color: '#c71f37' }}>
+                      <Delete />
+                    </IconButton>
+                    {task.status === 'COMPLETED' && (
+                      <IconButton onClick={() => handleApprove(task.id)} sx={{ color: '#c71f37' }} title="Approve Task">
+                        <Check />
+                      </IconButton>
+                    )}
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
@@ -360,6 +407,15 @@ function TaskManagement() {
           </DialogActions>
         </form>
       </Dialog>
+
+      <TaskDetailsAdmin
+        task={selectedTask}
+        open={taskDetailsOpen}
+        onClose={() => setTaskDetailsOpen(false)}
+        onTaskUpdate={handleTaskUpdate}
+        currentUser={currentUser}
+        employees={employees}
+      />
     </Box>
   )
 }

@@ -99,9 +99,6 @@ function Layout({ user, onLogout, children, tabs, activeTab, setActiveTab }) {
               <span style={{ color: '#000000' }}>10N</span>
               <span style={{ color: '#c71f37' }}>T</span>
             </Typography>
-            <Typography variant="subtitle1" sx={{ ml: 2, color: '#666666' }}>
-              Employee Management System
-            </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
