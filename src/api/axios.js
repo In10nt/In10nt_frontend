@@ -4,12 +4,17 @@ const api = axios.create({
   baseURL: '/api'
 })
 
-// Add token to all requests
+// Add token and user ID to all requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    if (user.id) {
+      config.headers['X-User-Id'] = user.id
     }
     return config
   },

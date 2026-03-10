@@ -13,7 +13,7 @@ function EmployeeDashboard({ user, onLogout }) {
 
   return (
     <Layout user={user} onLogout={onLogout} tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab}>
-      {activeTab === 'tasks' && <EmployeeTasks userId={user.id} />}
+      {activeTab === 'tasks' && <EmployeeTasks userId={user.id} currentUser={user} />}
       {activeTab === 'profile' && <EmployeeProfile user={user} />}
     </Layout>
   )

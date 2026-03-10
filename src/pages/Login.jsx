@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../api/axios'
 import './Login.css'
 
 function Login({ onLogin }) {
@@ -10,7 +10,7 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const response = await axios.post('/api/auth/login', { email, password })
+      const response = await api.post('/auth/login', { email, password })
       onLogin(response.data.user, response.data.token)
     } catch (err) {
       setError('Invalid credentials')

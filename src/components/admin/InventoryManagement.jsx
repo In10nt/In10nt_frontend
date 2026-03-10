@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Plus, Edit, Trash2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Search } from 'lucide-react'
 
 function InventoryManagement() {
   const [inventory, setInventory] = useState([])
+  const [filteredInventory, setFilteredInventory] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     itemName: '', category: '', quantity: '', unitPrice: '', description: ''
   })
@@ -13,6 +15,23 @@ function InventoryManagement() {
   useEffect(() => {
     fetchInventory()
   }, [])
+
+  useEffect(() => {
+    filterInventory()
+  }, [inventory, searchTerm])
+
+  const filterInventory = () => {
+    if (!searchTerm) {
+      setFilteredInventory(inventory)
+    } else {
+      const filtered = inventory.filter(item =>
+        item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredInventory(filtered)
+    }
+  }
 
   const fetchInventory = async () => {
     const response = await axios.get('/api/inventory')
@@ -48,6 +67,31 @@ function InventoryManagement() {
         </button>
       </div>
 
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ position: 'relative', maxWidth: '400px' }}>
+          <Search size={20} style={{ 
+            position: 'absolute', 
+            left: '12px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            color: '#c71f37' 
+          }} />
+          <input
+            type="text"
+            placeholder="Search inventory by name, category, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 12px 12px 40px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              fontSize: '14px'
+            }}
+          />
+        </div>
+      </div>
+
       {showForm && (
         <div className="card" style={{ marginBottom: '20px' }}>
           <h3>{editingItem ? 'Edit Item' : 'New Item'}</h3>
@@ -78,7 +122,7 @@ function InventoryManagement() {
             </tr>
           </thead>
           <tbody>
-            {inventory.map(item => (
+            {filteredInventory.map(item => (
               <tr key={item.id}>
                 <td>{item.itemName}</td>
                 <td>{item.category}</td>
