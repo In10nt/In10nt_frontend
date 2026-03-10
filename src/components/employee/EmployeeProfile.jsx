@@ -120,7 +120,14 @@ function EmployeeProfile({ user }) {
       const response = await api.put(`/users/${user.id}`, formData)
       console.log('Update response:', response.data)
       
-      const updatedUser = { ...user, ...formData }
+      const updatedUser = { 
+        ...user, 
+        fullName: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
+        department: formData.department
+        // Don't store profilePicture in localStorage
+      }
       localStorage.setItem('user', JSON.stringify(updatedUser))
       
       // Dispatch custom event to update App state

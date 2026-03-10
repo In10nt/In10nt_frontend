@@ -13,7 +13,14 @@ function Login({ onLogin }) {
       const response = await api.post('/auth/login', { email, password })
       onLogin(response.data.user, response.data.token)
     } catch (err) {
-      setError('Invalid credentials')
+      console.error('Login error:', err)
+      if (err.response?.data) {
+        setError(err.response.data)
+      } else if (err.message) {
+        setError(`Connection error: ${err.message}`)
+      } else {
+        setError('Invalid credentials')
+      }
     }
   }
 

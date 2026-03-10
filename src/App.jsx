@@ -49,9 +49,23 @@ function App() {
   }, [])
 
   const handleLogin = (userData, token) => {
+    // Store only essential user data to avoid localStorage quota issues
+    const essentialUserData = {
+      id: userData.id,
+      email: userData.email,
+      fullName: userData.fullName,
+      role: userData.role,
+      department: userData.department,
+      phone: userData.phone,
+      address: userData.address,
+      salary: userData.salary,
+      active: userData.active
+      // Exclude profilePicture and other large fields
+    }
+    
     localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
+    localStorage.setItem('user', JSON.stringify(essentialUserData))
+    setUser(essentialUserData)
   }
 
   const handleLogout = () => {
