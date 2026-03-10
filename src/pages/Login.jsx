@@ -23,9 +23,9 @@ function Login({ onLogin }) {
         <div className="logo">
           <svg viewBox="0 0 200 60" width="200" height="60">
             <text x="10" y="45" fontFamily="Arial, sans-serif" fontSize="40" fontWeight="bold">
-              <tspan fill="#E91E63">iN</tspan>
+              <tspan fill="#c71f37">iN</tspan>
               <tspan fill="#212121">10N</tspan>
-              <tspan fill="#E91E63">T</tspan>
+              <tspan fill="#c71f37">T</tspan>
             </text>
           </svg>
         </div>

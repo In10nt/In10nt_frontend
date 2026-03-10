@@ -43,6 +43,7 @@ function EmployeeManagement() {
     department: '',
     salary: ''
   })
+  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     fetchEmployees()
@@ -66,6 +67,59 @@ function EmployeeManagement() {
     }
   }
 
+  // Phone validation function
+  const validatePhone = (phone) => {
+    if (!phone) return true // Phone is optional
+    
+    // Remove all non-digit characters for validation
+    const cleanPhone = phone.replace(/\D/g, '')
+    
+    // Check if it's a valid length (10-15 digits)
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      return false
+    }
+    
+    // Check if it contains only valid characters (digits, spaces, hyphens, parentheses, plus)
+    const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,20}$/
+    return phoneRegex.test(phone)
+  }
+
+  // Format phone number as user types
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digit characters
+    const cleanValue = value.replace(/\D/g, '')
+    
+    // Limit to 15 digits
+    const limitedValue = cleanValue.slice(0, 15)
+    
+    // Format based on length
+    if (limitedValue.length <= 3) {
+      return limitedValue
+    } else if (limitedValue.length <= 6) {
+      return `${limitedValue.slice(0, 3)}-${limitedValue.slice(3)}`
+    } else if (limitedValue.length <= 10) {
+      return `${limitedValue.slice(0, 3)}-${limitedValue.slice(3, 6)}-${limitedValue.slice(6)}`
+    } else {
+      return `+${limitedValue.slice(0, -10)} ${limitedValue.slice(-10, -7)}-${limitedValue.slice(-7, -4)}-${limitedValue.slice(-4)}`
+    }
+  }
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value
+    const formattedPhone = formatPhoneNumber(value)
+    
+    setFormData({ ...formData, phone: formattedPhone })
+    
+    // Validate phone number
+    if (value && !validatePhone(formattedPhone)) {
+      setErrors({ ...errors, phone: 'Please enter a valid phone number (10-15 digits)' })
+    } else {
+      const newErrors = { ...errors }
+      delete newErrors.phone
+      setErrors(newErrors)
+    }
+  }
+
   const fetchEmployees = async () => {
     try {
       const response = await api.get('/users')
@@ -77,6 +131,13 @@ function EmployeeManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate phone before submitting
+    if (formData.phone && !validatePhone(formData.phone)) {
+      setErrors({ ...errors, phone: 'Please enter a valid phone number' })
+      return
+    }
+    
     try {
       if (editingEmployee) {
         await api.put(`/users/${editingEmployee.id}`, formData)
@@ -129,6 +190,7 @@ function EmployeeManagement() {
       department: '',
       salary: ''
     })
+    setErrors({})
   }
 
   const getRoleColor = (role) => {
@@ -216,7 +278,7 @@ function EmployeeManagement() {
                 </TableCell>
                 <TableCell>{employee.department || '-'}</TableCell>
                 <TableCell>{employee.phone || '-'}</TableCell>
-                <TableCell>{employee.salary ? `$${employee.salary}` : '-'}</TableCell>
+                <TableCell>{employee.salary ? `Rs.${employee.salary}` : '-'}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(employee)} sx={{ color: '#c71f37' }}>
                     <Edit />
@@ -299,7 +361,15 @@ function EmployeeManagement() {
               <TextField
                 label="Phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={handlePhoneChange}
+                error={!!errors.phone}
+                helperText={errors.phone || 'Format: 123-456-7890 or +1 123-456-7890'}
+                placeholder="123-456-7890"
+                slotProps={{
+                  input: {
+                    maxLength: 20
+                  }
+                }}
                 fullWidth
               />
               
@@ -318,7 +388,12 @@ function EmployeeManagement() {
             <Button 
               type="submit" 
               variant="contained"
-              sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
+              disabled={!!errors.phone}
+              sx={{ 
+                backgroundColor: '#c71f37', 
+                '&:hover': { backgroundColor: '#a01729' },
+                '&:disabled': { backgroundColor: '#ccc' }
+              }}
             >
               {editingEmployee ? 'Update' : 'Create'} Employee
             </Button>

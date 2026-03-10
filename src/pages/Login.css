@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #E91E63 0%, #212121 100%);
+  background: white;
 }
 
 .login-card {

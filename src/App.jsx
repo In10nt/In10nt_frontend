@@ -11,11 +11,40 @@ import CEODashboard from './pages/CEODashboard'
 function App() {
   const [user, setUser] = useState(null)
 
+  // Function to refresh user data from localStorage
+  const refreshUserData = () => {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userData = localStorage.getItem('user')
     if (token && userData) {
       setUser(JSON.parse(userData))
+    }
+
+    // Listen for storage changes (when profile is updated)
+    const handleStorageChange = (e) => {
+      if (e.key === 'user') {
+        refreshUserData()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Also listen for custom events for same-tab updates
+    const handleUserUpdate = () => {
+      refreshUserData()
+    }
+    
+    window.addEventListener('userUpdated', handleUserUpdate)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('userUpdated', handleUserUpdate)
     }
   }, [])
 

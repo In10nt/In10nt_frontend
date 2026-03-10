@@ -9,6 +9,7 @@ import InventoryManagement from '../components/admin/InventoryManagement'
 import SubscriptionManagement from '../components/admin/SubscriptionManagement'
 import ProjectManagement from '../components/admin/ProjectManagement'
 import ProjectMembersManagement from '../components/admin/ProjectMembersManagement'
+import AdminProfile from '../components/admin/AdminProfile'
 
 function AdminDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('tasks')
@@ -21,7 +22,8 @@ function AdminDashboard({ user, onLogout }) {
     { id: 'leaves', label: 'Leaves' },
     { id: 'salary', label: 'Salary' },
     { id: 'inventory', label: 'Inventory' },
-    { id: 'subscriptions', label: 'Subscriptions' }
+    { id: 'subscriptions', label: 'Subscriptions' },
+    { id: 'profile', label: 'Profile' }
   ]
 
   return (
@@ -34,6 +36,7 @@ function AdminDashboard({ user, onLogout }) {
       {activeTab === 'salary' && <SalaryManagement />}
       {activeTab === 'inventory' && <InventoryManagement />}
       {activeTab === 'subscriptions' && <SubscriptionManagement />}
+      {activeTab === 'profile' && <AdminProfile user={user} />}
     </Layout>
   )
 }
