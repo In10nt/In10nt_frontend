@@ -17,7 +17,7 @@ import {
 import { PhotoCamera, Edit } from '@mui/icons-material'
 import api from '../../api/axios'
 
-function EmployeeProfile({ user }) {
+function AdminProfile({ user }) {
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -87,7 +87,7 @@ function EmployeeProfile({ user }) {
   return (
     <Box>
       <Typography variant="h4" component="h1" sx={{ color: '#000000', mb: 3 }}>
-        My Profile
+        Admin Profile
       </Typography>
       
       <Card sx={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -140,7 +140,7 @@ function EmployeeProfile({ user }) {
                 {formData.email}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {user?.role || 'Employee'}
+                {user?.role || 'Admin'} • System Administrator
               </Typography>
             </Box>
           </Box>
@@ -286,4 +286,4 @@ function EmployeeProfile({ user }) {
   )
 }
 
-export default EmployeeProfile
+export default AdminProfile

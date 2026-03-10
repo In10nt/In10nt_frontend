@@ -26,9 +26,10 @@ import {
   MenuItem,
   Tabs,
   Tab,
-  Badge
+  Badge,
+  InputAdornment
 } from '@mui/material'
-import { Add, Visibility, PlayArrow, Edit, Delete } from '@mui/icons-material'
+import { Add, Visibility, PlayArrow, Edit, Delete, Search } from '@mui/icons-material'
 import api from '../../api/axios'
 import TaskDetails from './TaskDetails'
 
@@ -36,6 +37,7 @@ function EmployeeTasks({ userId, currentUser }) {
   const [tasks, setTasks] = useState([])
   const [filteredTasks, setFilteredTasks] = useState([])
   const [taskFilter, setTaskFilter] = useState('all') // 'all', 'created', 'assigned'
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedTask, setSelectedTask] = useState(null)
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false)
   const [createTaskOpen, setCreateTaskOpen] = useState(false)
@@ -53,11 +55,12 @@ function EmployeeTasks({ userId, currentUser }) {
 
   useEffect(() => {
     filterTasks()
-  }, [tasks, taskFilter])
+  }, [tasks, taskFilter, searchTerm])
 
   const filterTasks = () => {
     let filtered = tasks
     
+    // First filter by task type
     switch (taskFilter) {
       case 'created':
         filtered = tasks.filter(task => task.createdBy?.id === userId)
@@ -67,6 +70,16 @@ function EmployeeTasks({ userId, currentUser }) {
         break
       default:
         filtered = tasks
+    }
+    
+    // Then filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(task =>
+        task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.priority.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     }
     
     setFilteredTasks(filtered)
@@ -274,6 +287,33 @@ function EmployeeTasks({ userId, currentUser }) {
             value="assigned" 
           />
         </Tabs>
+      </Box>
+
+      {/* Search Box */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Search tasks by title, description, status, or priority..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: '#c71f37' }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: '#c71f37',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#c71f37',
+              },
+            },
+          }}
+        />
       </Box>
 
       {filteredTasks.length === 0 ? (
