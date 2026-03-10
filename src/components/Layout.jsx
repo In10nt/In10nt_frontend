@@ -30,6 +30,7 @@ import {
   Folder,
   Group
 } from '@mui/icons-material'
+import NotificationBell from '../components/common/NotificationBell'
 
 const drawerWidth = 240
 const collapsedWidth = 65
@@ -102,6 +103,7 @@ function Layout({ user, onLogout, children, tabs, activeTab, setActiveTab }) {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <NotificationBell user={user} />
             <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' }, color: '#000000' }}>
               {user.fullName} ({user.role})
             </Typography>
@@ -113,7 +115,10 @@ function Layout({ user, onLogout, children, tabs, activeTab, setActiveTab }) {
               onClick={handleUserMenuOpen}
               sx={{ color: '#c71f37' }}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#c71f37' }}>
+              <Avatar 
+                src={user.profilePicture} 
+                sx={{ width: 32, height: 32, bgcolor: '#c71f37' }}
+              >
                 {user.fullName?.charAt(0)}
               </Avatar>
             </IconButton>

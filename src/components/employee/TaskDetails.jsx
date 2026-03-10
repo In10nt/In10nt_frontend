@@ -42,6 +42,7 @@ import {
   CloudUpload
 } from '@mui/icons-material'
 import api from '../../api/axios'
+import AttachmentWithComments from '../common/AttachmentWithComments'
 
 function TaskDetails({ task, open, onClose, onTaskUpdate, currentUser }) {
   const [subtasks, setSubtasks] = useState([])
@@ -370,7 +371,7 @@ function TaskDetails({ task, open, onClose, onTaskUpdate, currentUser }) {
                 <Typography variant="h6">Work Attachments ({attachments.length})</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Available at any task status
+                    Employees can attach work at any task status
                   </Typography>
                   <Button
                     variant="outlined"
@@ -469,62 +470,23 @@ function TaskDetails({ task, open, onClose, onTaskUpdate, currentUser }) {
                 </Paper>
               )}
               
-              <List>
+              {/* Enhanced Attachments with Comments */}
+              <Box>
                 {attachments.map((attachment) => (
-                  <ListItem key={attachment.id} divider>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                      {attachment.type === 'LINK' ? (
-                        <LinkIcon />
-                      ) : (
-                        <ImageIcon />
-                      )}
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle2">{attachment.fileName}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {attachment.description}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                          <Chip 
-                            label={attachment.approvalStatus} 
-                            color={getApprovalStatusColor(attachment.approvalStatus)}
-                            size="small"
-                          />
-                          {attachment.reviewComment && (
-                            <Typography variant="caption" color="text.secondary">
-                              Review: {attachment.reviewComment}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        {attachment.type === 'LINK' ? (
-                          <IconButton 
-                            onClick={() => window.open(attachment.fileUrl, '_blank')}
-                            title="Open Link"
-                          >
-                            <Visibility />
-                          </IconButton>
-                        ) : (
-                          <IconButton 
-                            onClick={() => window.open(attachment.fileUrl, '_blank')}
-                            title="View Image"
-                          >
-                            <Visibility />
-                          </IconButton>
-                        )}
-                        <IconButton onClick={() => handleDeleteAttachment(attachment.id)}>
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </ListItem>
+                  <AttachmentWithComments
+                    key={attachment.id}
+                    attachment={attachment}
+                    currentUser={currentUser}
+                    onAttachmentUpdate={fetchAttachments}
+                    isAdmin={false}
+                  />
                 ))}
                 {attachments.length === 0 && (
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
                     No work attachments yet. Add links or images of your work!
                   </Typography>
                 )}
-              </List>
+              </Box>
             </CardContent>
           </Card>
 

@@ -40,6 +40,7 @@ import {
   Visibility
 } from '@mui/icons-material'
 import api from '../../api/axios'
+import AttachmentWithComments from '../common/AttachmentWithComments'
 
 function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, employees }) {
   const [subtasks, setSubtasks] = useState([])
@@ -304,90 +305,23 @@ function TaskDetailsAdmin({ task, open, onClose, onTaskUpdate, currentUser, empl
                 </Typography>
               </Box>
               
-              <List>
+              {/* Enhanced Attachments with Comments and Admin Controls */}
+              <Box>
                 {attachments.map((attachment) => (
-                  <ListItem key={attachment.id} divider>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                      {attachment.type === 'LINK' ? (
-                        <LinkIcon />
-                      ) : (
-                        <ImageIcon />
-                      )}
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle2">{attachment.fileName}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Uploaded by: {attachment.uploadedBy?.fullName}
-                        </Typography>
-                        <br />
-                        <Typography variant="caption" color="text.secondary">
-                          {attachment.description}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                          <Chip 
-                            label={attachment.approvalStatus} 
-                            color={getApprovalStatusColor(attachment.approvalStatus)}
-                            size="small"
-                          />
-                          {attachment.reviewComment && (
-                            <Typography variant="caption" color="text.secondary">
-                              Review: {attachment.reviewComment}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          {attachment.type === 'LINK' ? (
-                            <IconButton 
-                              onClick={() => window.open(attachment.fileUrl, '_blank')}
-                              title="Open Link"
-                              size="small"
-                            >
-                              <Visibility />
-                            </IconButton>
-                          ) : (
-                            <IconButton 
-                              onClick={() => window.open(attachment.fileUrl, '_blank')}
-                              title="View Image"
-                              size="small"
-                            >
-                              <Visibility />
-                            </IconButton>
-                          )}
-                        </Box>
-                        {attachment.approvalStatus === 'PENDING' && (
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              color="success"
-                              onClick={() => handleReviewAttachment(attachment.id, 'APPROVED', 'Work approved')}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              color="error"
-                              onClick={() => {
-                                const comment = prompt('Rejection reason (optional):')
-                                handleReviewAttachment(attachment.id, 'REJECTED', comment || 'Work rejected')
-                              }}
-                            >
-                              Reject
-                            </Button>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                  </ListItem>
+                  <AttachmentWithComments
+                    key={attachment.id}
+                    attachment={attachment}
+                    currentUser={currentUser}
+                    onAttachmentUpdate={fetchAttachments}
+                    isAdmin={true}
+                  />
                 ))}
                 {attachments.length === 0 && (
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
                     No work attachments submitted yet.
                   </Typography>
                 )}
-              </List>
+              </Box>
             </CardContent>
           </Card>
 

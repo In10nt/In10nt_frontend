@@ -74,14 +74,17 @@ function TaskManagement() {
     // First filter by task type
     switch (taskFilter) {
       case 'admin-created':
-        filtered = tasks.filter(task => 
-          task.createdBy?.role === 'ADMIN' || task.createdBy?.role === 'CEO'
-        )
+        filtered = tasks.filter(task => {
+          // Simple check: if createdBy exists and role is ADMIN or CEO
+          return task.createdBy && 
+                 (task.createdBy.role === 'ADMIN' || task.createdBy.role === 'CEO')
+        })
         break
       case 'employee-created':
-        filtered = tasks.filter(task => 
-          task.createdBy?.role === 'EMPLOYEE'
-        )
+        filtered = tasks.filter(task => {
+          // Simple check: if createdBy exists and role is EMPLOYEE
+          return task.createdBy && task.createdBy.role === 'EMPLOYEE'
+        })
         break
       default:
         filtered = tasks
@@ -92,7 +95,7 @@ function TaskManagement() {
       filtered = filtered.filter(task =>
         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.assignedTo?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.assignedTo?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.priority.toLowerCase().includes(searchTerm.toLowerCase())
       )
@@ -103,7 +106,15 @@ function TaskManagement() {
 
   const fetchTasks = async () => {
     try {
+      console.log('Fetching tasks from API...')
       const response = await api.get('/tasks')
+      console.log('Raw API response:', response.data)
+      console.log('Tasks with createdBy details:', response.data.map(task => ({
+        id: task.id,
+        title: task.title,
+        createdBy: task.createdBy,
+        assignedTo: task.assignedTo
+      })))
       setTasks(response.data)
     } catch (error) {
       console.error('Error fetching tasks:', error)
@@ -235,14 +246,32 @@ function TaskManagement() {
         <Typography variant="h4" component="h1" sx={{ color: '#000000' }}>
           Task Management ({filteredTasks.length})
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpen(true)}
-          sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
-        >
-          Add Task
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              fetchTasks()
+            }}
+            sx={{ 
+              borderColor: '#c71f37', 
+              color: '#c71f37',
+              '&:hover': { 
+                borderColor: '#a01729',
+                backgroundColor: 'rgba(199, 31, 55, 0.04)'
+              }
+            }}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setOpen(true)}
+            sx={{ backgroundColor: '#c71f37', '&:hover': { backgroundColor: '#a01729' } }}
+          >
+            Add Task
+          </Button>
+        </Box>
       </Box>
 
       {/* Filter Tabs */}

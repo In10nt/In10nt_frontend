@@ -95,7 +95,7 @@ function SalaryManagement() {
                       autoFocus
                     />
                   ) : (
-                    `$${emp.salary || 0}`
+                    `Rs.${emp.salary || 0}`
                   )}
                 </td>
                 <td>
