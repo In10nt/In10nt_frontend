@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../api/axios'
 import { Edit } from 'lucide-react'
 
 function SalaryManagement() {
@@ -11,12 +11,12 @@ function SalaryManagement() {
   }, [])
 
   const fetchEmployees = async () => {
-    const response = await axios.get('/api/users')
+    const response = await api.get('/users')
     setEmployees(response.data)
   }
 
   const handleUpdateSalary = async (id, newSalary) => {
-    await axios.put(`/api/users/${id}`, { salary: parseFloat(newSalary) })
+    await api.put(`/users/${id}`, { salary: parseFloat(newSalary) })
     setEditingSalary(null)
     fetchEmployees()
   }

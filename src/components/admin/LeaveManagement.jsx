@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../api/axios'
 import { Check, X } from 'lucide-react'
 
 function LeaveManagement() {
@@ -10,19 +10,19 @@ function LeaveManagement() {
   }, [])
 
   const fetchLeaves = async () => {
-    const response = await axios.get('/api/leaves')
+    const response = await api.get('/leaves')
     setLeaves(response.data)
   }
 
   const handleApprove = async (id) => {
-    await axios.put(`/api/leaves/${id}/approve`)
+    await api.put(`/leaves/${id}/approve`)
     fetchLeaves()
   }
 
   const handleReject = async (id) => {
     const reason = prompt('Rejection reason:')
     if (reason) {
-      await axios.put(`/api/leaves/${id}/reject`, reason)
+      await api.put(`/leaves/${id}/reject`, reason)
       fetchLeaves()
     }
   }

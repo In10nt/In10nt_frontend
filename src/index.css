@@ -6,16 +6,17 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background: #f5f5f5;
+  background: #FFFFFF;
 }
 
 :root {
-  --primary: #E91E63;
-  --primary-dark: #C2185B;
-  --secondary: #212121;
+  --primary: #D32F2F;
+  --primary-dark: #C62828;
+  --primary-light: #EF5350;
+  --secondary: #666666;
   --text: #333;
   --border: #e0e0e0;
-  --bg-light: #fafafa;
+  --bg-light: #FFFFFF;
 }
 
 .btn {
@@ -38,8 +39,13 @@ body {
 }
 
 .btn-secondary {
-  background: var(--secondary);
-  color: white;
+  background: white;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-light);
 }
 
 .card {
@@ -47,6 +53,7 @@ body {
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
 }
 
 input, select, textarea {
@@ -74,6 +81,7 @@ th, td {
 }
 
 th {
-  background: var(--bg-light);
+  background: #FFFFFF;
   font-weight: 600;
+  border-bottom: 2px solid var(--border);
 }

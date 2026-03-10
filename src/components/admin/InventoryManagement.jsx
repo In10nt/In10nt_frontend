@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../api/axios'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 
 function InventoryManagement() {
@@ -15,16 +15,16 @@ function InventoryManagement() {
   }, [])
 
   const fetchInventory = async () => {
-    const response = await axios.get('/api/inventory')
+    const response = await api.get('/inventory')
     setInventory(response.data)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (editingItem) {
-      await axios.put(`/api/inventory/${editingItem.id}`, formData)
+      await api.put(`/inventory/${editingItem.id}`, formData)
     } else {
-      await axios.post('/api/inventory', formData)
+      await api.post('/inventory', formData)
     }
     setShowForm(false)
     setEditingItem(null)
@@ -34,7 +34,7 @@ function InventoryManagement() {
 
   const handleDelete = async (id) => {
     if (confirm('Delete this item?')) {
-      await axios.delete(`/api/inventory/${id}`)
+      await api.delete(`/inventory/${id}`)
       fetchInventory()
     }
   }

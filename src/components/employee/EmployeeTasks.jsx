@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../api/axios'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 
 function EmployeeTasks({ userId }) {
@@ -15,16 +15,16 @@ function EmployeeTasks({ userId }) {
   }, [userId])
 
   const fetchTasks = async () => {
-    const response = await axios.get(`/api/tasks/assigned/${userId}`)
+    const response = await api.get(`/tasks/assigned/${userId}`)
     setTasks(response.data)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (editingTask) {
-      await axios.put(`/api/tasks/${editingTask.id}`, formData)
+      await api.put(`/tasks/${editingTask.id}`, formData)
     } else {
-      await axios.post('/api/tasks', { ...formData, createdBy: { id: userId } })
+      await api.post('/tasks', { ...formData, createdBy: { id: userId } })
     }
     setShowForm(false)
     setEditingTask(null)
@@ -34,13 +34,13 @@ function EmployeeTasks({ userId }) {
 
   const handleDelete = async (id) => {
     if (confirm('Delete this task?')) {
-      await axios.delete(`/api/tasks/${id}`)
+      await api.delete(`/tasks/${id}`)
       fetchTasks()
     }
   }
 
   const handleUpdateProgress = async (id, progress) => {
-    await axios.put(`/api/tasks/${id}`, { progress: parseInt(progress) })
+    await api.put(`/tasks/${id}`, { progress: parseInt(progress) })
     fetchTasks()
   }
 

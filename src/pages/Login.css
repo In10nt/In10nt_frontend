@@ -3,16 +3,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #E91E63 0%, #212121 100%);
+  background: #FFFFFF;
 }
 
 .login-card {
   background: white;
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
   width: 100%;
   max-width: 400px;
+  border: 2px solid #e0e0e0;
 }
 
 .logo {
@@ -22,7 +23,7 @@
 
 .login-card h2 {
   text-align: center;
-  color: var(--secondary);
+  color: #333333;
   margin-bottom: 30px;
   font-size: 20px;
 }

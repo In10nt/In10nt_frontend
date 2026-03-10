@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../api/axios'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 
 function EmployeeManagement() {
@@ -15,16 +15,16 @@ function EmployeeManagement() {
   }, [])
 
   const fetchEmployees = async () => {
-    const response = await axios.get('/api/users')
+    const response = await api.get('/users')
     setEmployees(response.data)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (editingEmployee) {
-      await axios.put(`/api/users/${editingEmployee.id}`, formData)
+      await api.put(`/users/${editingEmployee.id}`, formData)
     } else {
-      await axios.post('/api/users', formData)
+      await api.post('/users', formData)
     }
     setShowForm(false)
     setEditingEmployee(null)
@@ -34,7 +34,7 @@ function EmployeeManagement() {
 
   const handleDelete = async (id) => {
     if (confirm('Delete this employee?')) {
-      await axios.delete(`/api/users/${id}`)
+      await api.delete(`/users/${id}`)
       fetchEmployees()
     }
   }

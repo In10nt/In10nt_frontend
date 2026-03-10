@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../api/axios'
 import { Plus, Edit, Trash2, Check } from 'lucide-react'
 
 function TaskManagement() {
@@ -17,37 +17,57 @@ function TaskManagement() {
   }, [])
 
   const fetchTasks = async () => {
-    const response = await axios.get('/api/tasks')
+    const response = await api.get('/tasks')
     setTasks(response.data)
   }
 
   const fetchEmployees = async () => {
-    const response = await axios.get('/api/users')
+    const response = await api.get('/users')
     setEmployees(response.data.filter(u => u.role === 'EMPLOYEE'))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (editingTask) {
-      await axios.put(`/api/tasks/${editingTask.id}`, formData)
-    } else {
-      await axios.post('/api/tasks', formData)
+    try {
+      // Prepare the data for backend
+      const taskData = {
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        assignedTo: formData.assignedTo ? { id: formData.assignedTo.id } : null,
+        dueDate: formData.dueDate ? `${formData.dueDate}T00:00:00` : null,
+        status: 'PENDING',
+        progress: 0
+      }
+
+      console.log('Sending task data:', taskData) // Debug log
+
+      if (editingTask) {
+        await api.put(`/tasks/${editingTask.id}`, taskData)
+      } else {
+        await api.post('/tasks', taskData)
+      }
+      
+      setShowForm(false)
+      setEditingTask(null)
+      setFormData({ title: '', description: '', priority: 'MEDIUM', assignedTo: null, dueDate: '' })
+      fetchTasks()
+    } catch (error) {
+      console.error('Error saving task:', error)
+      console.error('Error response:', error.response?.data)
+      alert('Error saving task: ' + (error.response?.data || error.message))
     }
-    setShowForm(false)
-    setEditingTask(null)
-    setFormData({ title: '', description: '', priority: 'MEDIUM', assignedTo: null, dueDate: '' })
-    fetchTasks()
   }
 
   const handleDelete = async (id) => {
     if (confirm('Delete this task?')) {
-      await axios.delete(`/api/tasks/${id}`)
+      await api.delete(`/tasks/${id}`)
       fetchTasks()
     }
   }
 
   const handleApprove = async (id) => {
-    await axios.put(`/api/tasks/${id}`, { status: 'APPROVED' })
+    await api.put(`/tasks/${id}`, { status: 'APPROVED' })
     fetchTasks()
   }
 
